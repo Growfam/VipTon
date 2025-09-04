@@ -248,16 +248,17 @@ def create_app():
 app = create_app()
 
 if __name__ == '__main__':
-    port = int(os.getenv('PORT', 8080))
-    debug = app.config['ENVIRONMENT'] == 'development'
+    import os
 
-    logger.info("🚀 Starting VipTon Telegram Mini App...")
-    logger.info(f"🌍 Running on port: {port}")
-    logger.info(f"🔧 Environment: {app.config['ENVIRONMENT']}")
-    logger.info(f"📱 Frontend path: {Path(__file__).resolve().parent.parent / 'frontend'}")
+    # Отримуємо порт з оточення
+    port = int(os.environ.get('PORT', 8080))
+
+    print(f"🚀 Starting VipTon...")
+    print(f"📍 PORT from environment: {os.environ.get('PORT', 'NOT SET')}")
+    print(f"🌐 Running on port: {port}")
 
     app.run(
         host='0.0.0.0',
         port=port,
-        debug=debug
+        debug=False
     )
