@@ -1,1 +1,1 @@
-web: gunicorn app:app --bind 0.0.0.0:$PORT --workers 4 --worker-class gevent --worker-connections 1000 --timeout 120 --keep-alive 5 --log-level info --access-logfile - --error-logfile -
+web: python backend/main.py
