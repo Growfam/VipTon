@@ -83,7 +83,7 @@ def create_app():
     )
 
     # Ініціалізуємо базу даних
-    from core.database import init_db
+    from backend.core.database import init_db
     try:
         init_db(app)
         logger.info("✅ Database initialized")
@@ -100,7 +100,7 @@ def create_app():
         return response
 
     # Реєструємо blueprints
-    from auth.routes import auth_bp
+    from backend.auth.routes import auth_bp
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
 
     # Основні роути
@@ -227,7 +227,7 @@ def create_app():
         }), 500
 
     # Custom error handlers для VipTon exceptions
-    from core.exceptions import VipTonException, handle_vipton_exception, APIException
+    from backend.core.exceptions import VipTonException, handle_vipton_exception, APIException
 
     @app.errorhandler(VipTonException)
     def handle_vipton_error(error):
