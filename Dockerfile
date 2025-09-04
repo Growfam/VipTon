@@ -15,5 +15,3 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Копіюємо весь проект
 COPY . .
 
-# Запускаємо через Python
-CMD ["python", "-m", "backend.main"]
