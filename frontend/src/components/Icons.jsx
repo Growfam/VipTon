@@ -27,12 +27,12 @@ logo: (props) => (
         `}
       </style>
     </defs>
-    <rect width="24" height="24" fill="url(#vt-gradient)" rx="4" />
+    <rect width="24" height="24" fill="url(#vt-gradient)" rx="3" />
     <text
       x="12"
-      y="17.5"
+      y="19"
       fontFamily="Arial Black"
-      fontSize="14"
+      fontSize="20"
       fontWeight="900"
       fill="#000000"
       textAnchor="middle"
