@@ -8,7 +8,7 @@ import React from 'react';
 export const Icons = {
   // Logo & Branding - Animated VT Premium
 logo: (props) => (
-  <svg width="40" height="40" viewBox="0 0 180 180" {...props}>
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" {...props}>
     <defs>
       <radialGradient id="vt-gradient">
         <stop offset="0%" style={{ stopColor: '#FFEB3B', stopOpacity: 1 }} />
@@ -27,12 +27,12 @@ logo: (props) => (
         `}
       </style>
     </defs>
-    <rect width="180" height="180" fill="url(#vt-gradient)" rx="20" />
+    <rect width="24" height="24" fill="url(#vt-gradient)" rx="4" />
     <text
-      x="90"
-      y="115"
+      x="12"
+      y="17.5"
       fontFamily="Arial Black"
-      fontSize="75"
+      fontSize="14"
       fontWeight="900"
       fill="#000000"
       textAnchor="middle"
@@ -70,7 +70,6 @@ logo: (props) => (
       <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
     </svg>
   ),
-
 
   // Mining - Pickaxe Icon
   mining: (props) => (
