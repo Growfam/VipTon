@@ -9,6 +9,7 @@ import AuthError from '../../shared/auth/components/AuthError';
 import UserBadge from '../../shared/auth/components/UserBadge';
 import VipBadge from '../../shared/auth/components/VipBadge';
 
+
 /**
  * VipTon Home Page Component
  */
