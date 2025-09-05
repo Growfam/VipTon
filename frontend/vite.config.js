@@ -5,9 +5,6 @@ import path from 'path';
 export default defineConfig({
     plugins: [react()],
 
-    root: '.', // Корінь проекту
-    publicDir: 'public', // Папка з public файлами
-
     resolve: {
         alias: {
             '@': path.resolve(__dirname, './src'),
@@ -22,20 +19,21 @@ export default defineConfig({
         host: true,
         proxy: {
             '/api': {
-                target: 'http://localhost:8080', // Для локальної розробки
+                target: 'http://localhost:8080',
                 changeOrigin: true
             }
         }
     },
 
     build: {
-        outDir: '../backend/static', // Build прямо в backend/static
+        outDir: '../backend/static',
         emptyOutDir: true,
         assetsDir: 'assets',
         sourcemap: false,
         rollupOptions: {
-            input: {
-                main: path.resolve(__dirname, 'public/index.html')
+            input: path.resolve(__dirname, 'index.html'),
+            output: {
+                manualChunks: undefined
             }
         }
     }
