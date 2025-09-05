@@ -6,12 +6,42 @@ import React from 'react';
  */
 
 export const Icons = {
-  // Logo & Branding (Original)
-  logo: (props) => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" {...props}>
-      <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 2.18l7 3.5V17c0 4.52-2.98 8.69-7 9.93-4.02-1.24-7-5.41-7-9.93V7.68l7-3.5zM12 7l-3.5 1.75v5.25c0 2.1 1.4 4.05 3.5 4.47 2.1-.42 3.5-2.37 3.5-4.47V8.75L12 7z"/>
-    </svg>
-  ),
+  // Logo & Branding - Animated VT Premium
+logo: (props) => (
+  <svg width="40" height="40" viewBox="0 0 180 180" {...props}>
+    <defs>
+      <radialGradient id="vt-gradient">
+        <stop offset="0%" style={{ stopColor: '#FFEB3B', stopOpacity: 1 }} />
+        <stop offset="100%" style={{ stopColor: '#FFC107', stopOpacity: 1 }} />
+      </radialGradient>
+      <style>
+        {`
+          @keyframes vt-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+          }
+          .vt-animated {
+            animation: vt-pulse 3s ease-in-out infinite;
+            transform-origin: center;
+          }
+        `}
+      </style>
+    </defs>
+    <rect width="180" height="180" fill="url(#vt-gradient)" rx="20" />
+    <text
+      x="90"
+      y="115"
+      fontFamily="Arial Black"
+      fontSize="75"
+      fontWeight="900"
+      fill="#000000"
+      textAnchor="middle"
+      className="vt-animated"
+    >
+      VT
+    </text>
+  </svg>
+),
 
   // Header Icons - NEW Apple Style ✅
   shop: (props) => (
