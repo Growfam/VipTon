@@ -2,53 +2,41 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
-// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+    plugins: [react()],
 
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@shared': path.resolve(__dirname, './shared'),
-      '@pages': path.resolve(__dirname, './pages'),
-      '@app': path.resolve(__dirname, './app'),
-      '@auth': path.resolve(__dirname, './shared/auth'),
-      '@components': path.resolve(__dirname, './shared/components'),
-      '@services': path.resolve(__dirname, './shared/services'),
-      '@assets': path.resolve(__dirname, './assets')
-    }
-  },
+    root: '.', // Корінь проекту
+    publicDir: 'public', // Папка з public файлами
 
-  server: {
-    port: 3000,
-    host: true, // Listen on all addresses
-    proxy: {
-      '/api': {
-        target: 'https://vipton-vipton.up.railway.app',
-        changeOrigin: true,
-        secure: false
-      }
-    }
-  },
-
-  build: {
-    outDir: 'dist',
-    assetsDir: 'assets',
-    sourcemap: false,
-    minify: 'esbuild',
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'auth': ['./shared/auth/index.js']
+    resolve: {
+        alias: {
+            '@': path.resolve(__dirname, './src'),
+            '@shared': path.resolve(__dirname, './shared'),
+            '@pages': path.resolve(__dirname, './pages'),
+            '@auth': path.resolve(__dirname, './shared/auth'),
         }
-      }
-    }
-  },
+    },
 
-  css: {
-    modules: {
-      localsConvention: 'camelCase'
+    server: {
+        port: 3000,
+        host: true,
+        proxy: {
+            '/api': {
+                target: 'http://localhost:8080', // Для локальної розробки
+                changeOrigin: true
+            }
+        }
+    },
+
+    build: {
+        outDir: '../backend/static', // Build прямо в backend/static
+        emptyOutDir: true,
+        assetsDir: 'assets',
+        sourcemap: false,
+        rollupOptions: {
+            input: {
+                main: path.resolve(__dirname, 'public/index.html')
+            }
+        }
     }
-  }
 });

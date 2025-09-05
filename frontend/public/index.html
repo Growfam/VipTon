@@ -11,28 +11,16 @@
     <title>VipTon - Premium TON Mining</title>
 
     <style>
-        /* Base styles before React loads */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        /* Базові стилі до завантаження React */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
             background: #000000;
             color: #ffffff;
-            overscroll-behavior: none;
             -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
         }
 
-        #root {
-            min-height: 100vh;
-            position: relative;
-        }
-
-        /* Loading screen */
+        /* Preloader */
         .vipton-preloader {
             position: fixed;
             inset: 0;
@@ -56,41 +44,21 @@
             font-weight: 800;
             color: #000000;
             margin-bottom: 20px;
-            animation: preloader-pulse 2s ease-in-out infinite;
+            animation: pulse 2s ease-in-out infinite;
         }
 
-        @keyframes preloader-pulse {
-            0%, 100% {
-                transform: scale(1);
-                box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
-            }
-            50% {
-                transform: scale(1.05);
-                box-shadow: 0 5px 30px rgba(255, 215, 0, 0.5);
-            }
-        }
-
-        .vipton-preloader-text {
-            color: #8E8E93;
-            font-size: 14px;
-        }
-
-        /* Remove after React loads */
-        .app-loaded .vipton-preloader {
-            display: none;
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.9; }
         }
     </style>
 </head>
 <body>
     <div id="root">
-        <!-- Preloader -->
         <div class="vipton-preloader">
             <div class="vipton-preloader-logo">VT</div>
-            <div class="vipton-preloader-text">Loading VipTon...</div>
+            <div style="color: #8E8E93; font-size: 14px;">Loading VipTon...</div>
         </div>
     </div>
-
-    <!-- React will be injected here by build tool -->
-    <script type="module" src="/src/index.jsx"></script>
 </body>
 </html>

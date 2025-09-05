@@ -29,12 +29,16 @@ def create_app():
 
     # Шляхи до файлів
     BASE_DIR = Path(__file__).resolve().parent.parent
-    FRONTEND_FOLDER = BASE_DIR / 'frontend'
-    PAGES_FOLDER = FRONTEND_FOLDER / 'pages'
+
+    # React build folder
+    STATIC_FOLDER = BASE_DIR / 'backend' / 'static'
+
+    # Створюємо папку static якщо її немає
+    STATIC_FOLDER.mkdir(exist_ok=True)
 
     app = Flask(__name__,
-                static_folder=str(FRONTEND_FOLDER),
-                static_url_path='/static')
+                static_folder=str(STATIC_FOLDER),
+                static_url_path='')
 
     # Конфігурація
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'vipton-secure-secret-key-2025')
@@ -50,9 +54,15 @@ def create_app():
     allowed_origins = [
         app.config['WEBAPP_URL'],
         'https://web.telegram.org',
-        'http://localhost:3000',
+        'http://localhost:3000',  # Vite dev server
+        'http://localhost:5173',  # Alternative Vite port
         'http://localhost:8080'
     ]
+
+    # Додаємо Railway URL якщо є
+    railway_url = os.getenv('RAILWAY_STATIC_URL')
+    if railway_url:
+        allowed_origins.append(f'https://{railway_url}')
 
     CORS(app,
          origins=allowed_origins,
@@ -70,7 +80,9 @@ def create_app():
             r = redis.from_url(redis_url, socket_connect_timeout=2)
             r.ping()
             app.config['RATELIMIT_STORAGE_URL'] = redis_url
-        except:
+            logger.info("✅ Redis connected for rate limiting")
+        except Exception as e:
+            logger.warning(f"⚠️ Redis connection failed: {e}, using memory storage")
             app.config['RATELIMIT_STORAGE_URL'] = 'memory://'
     else:
         app.config['RATELIMIT_STORAGE_URL'] = 'memory://'
@@ -88,7 +100,7 @@ def create_app():
         init_db(app)
         logger.info("✅ Database initialized")
     except Exception as e:
-        logger.warning(f"Database initialization warning: {e}")
+        logger.warning(f"⚠️ Database initialization warning: {e}")
 
     # After request handler
     @app.after_request
@@ -103,49 +115,13 @@ def create_app():
     from backend.auth.routes import auth_bp
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
 
-    # Основні роути
-
-    @app.route('/')
-    def index():
-        """Головна сторінка"""
-        try:
-            home_path = PAGES_FOLDER / 'home' / 'home.html'
-
-            if home_path.exists():
-                with open(home_path, 'r', encoding='utf-8') as f:
-                    content = f.read()
-
-                # Додаємо конфігурацію
-                config_script = f"""
-                <script>
-                    window.VIPTON_CONFIG = {{
-                        API_URL: '{request.url_root.rstrip("/")}',
-                        WEBAPP_URL: '{app.config["WEBAPP_URL"]}',
-                        ENVIRONMENT: '{app.config["ENVIRONMENT"]}'
-                    }};
-                </script>
-                """
-                content = content.replace('</head>', f'{config_script}</head>')
-
-                return Response(content, mimetype='text/html; charset=utf-8')
-            else:
-                return jsonify({'error': 'Home page not found'}), 404
-
-        except Exception as e:
-            logger.error(f"Error serving home page: {e}")
-            return jsonify({'error': str(e)}), 500
-
-    @app.route('/home')
-    @app.route('/home/')
-    def home_page():
-        """Редірект на головну"""
-        return index()
-
-    # API endpoints
+    # =====================================
+    # API ENDPOINTS
+    # =====================================
 
     @app.route('/api/config', methods=['GET'])
     def get_config():
-        """Отримати конфігурацію"""
+        """Отримати конфігурацію для фронтенду"""
         return jsonify({
             'success': True,
             'data': {
@@ -157,7 +133,9 @@ def create_app():
                     'mining': True,
                     'referrals': True,
                     'tasks': True
-                }
+                },
+                'telegram_bot_username': os.getenv('BOT_USERNAME', 'vipton_bot'),
+                'version': '1.0.0'
             }
         })
 
@@ -167,64 +145,168 @@ def create_app():
         return jsonify({
             'status': 'healthy',
             'service': 'VipTon Mini App',
-            'version': '1.0.0'
+            'version': '1.0.0',
+            'timestamp': datetime.utcnow().isoformat()
         })
 
-    # Обробка статичних файлів
-    @app.route('/pages/<path:filename>')
-    def serve_pages(filename):
-        """Сервірування файлів з pages"""
-        return send_from_directory(str(PAGES_FOLDER), filename)
+    @app.route('/api/stats', methods=['GET'])
+    def get_stats():
+        """Отримати загальну статистику"""
+        try:
+            from backend.core.database import get_db
+            db = get_db()
+            stats = db.get_stats()
 
-    @app.route('/assets/<path:filename>')
-    def serve_assets(filename):
-        """Сервірування assets"""
-        assets_path = FRONTEND_FOLDER / 'assets'
-        return send_from_directory(str(assets_path), filename)
+            return jsonify({
+                'success': True,
+                'data': stats
+            })
+        except Exception as e:
+            logger.error(f"Stats error: {e}")
+            return jsonify({
+                'success': False,
+                'error': 'Failed to get stats'
+            }), 500
 
-    @app.route('/components/<path:filename>')
-    def serve_components(filename):
-        """Сервірування компонентів"""
-        # Спробуємо знайти в home/components
-        home_components = PAGES_FOLDER / 'home' / 'components'
-        if (home_components / filename).exists():
-            return send_from_directory(str(home_components), filename)
+    # =====================================
+    # REACT APP SERVING
+    # =====================================
 
-        # Якщо не знайдено - шукаємо в shared
-        shared_path = FRONTEND_FOLDER / 'shared'
-        return send_from_directory(str(shared_path), filename)
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def serve_react_app(path):
+        """Serve React application"""
 
-    @app.route('/services/<path:filename>')
-    def serve_services(filename):
-        """Сервірування сервісів"""
-        # Спробуємо знайти в home/services
-        home_services = PAGES_FOLDER / 'home' / 'services'
-        if (home_services / filename).exists():
-            return send_from_directory(str(home_services), filename)
-
-        # Якщо не знайдено - шукаємо в shared
-        shared_path = FRONTEND_FOLDER / 'shared'
-        return send_from_directory(str(shared_path), filename)
-
-    # Error handlers
-    @app.errorhandler(404)
-    def not_found(error):
-        if request.path.startswith('/api/'):
+        # API routes should not be handled here
+        if path.startswith('api/'):
             return jsonify({
                 'success': False,
                 'error': 'API endpoint not found',
                 'code': 'NOT_FOUND'
             }), 404
-        return index()  # Повертаємо головну сторінку для всіх інших 404
+
+        # Try to serve the file if it exists
+        static_file = Path(app.static_folder) / path
+
+        # Check if it's a static asset (js, css, images, etc)
+        static_extensions = {'.js', '.css', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.woff', '.woff2', '.ttf',
+                             '.eot'}
+
+        if static_file.exists() and static_file.is_file():
+            # Serve the actual file
+            return send_from_directory(app.static_folder, path)
+        elif path and '.' in path:
+            # If file has extension but doesn't exist, return 404
+            file_extension = Path(path).suffix.lower()
+            if file_extension in static_extensions:
+                return jsonify({
+                    'success': False,
+                    'error': f'Static file not found: {path}'
+                }), 404
+
+        # For all other routes, serve index.html (React Router will handle it)
+        index_path = Path(app.static_folder) / 'index.html'
+
+        if index_path.exists():
+            return send_from_directory(app.static_folder, 'index.html')
+        else:
+            # If no build exists, show development message
+            return """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>VipTon - Build Required</title>
+                <style>
+                    body {
+                        font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+                        background: #000;
+                        color: #fff;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        height: 100vh;
+                        margin: 0;
+                    }
+                    .container {
+                        text-align: center;
+                        padding: 20px;
+                    }
+                    .logo {
+                        width: 80px;
+                        height: 80px;
+                        background: linear-gradient(135deg, #FFD700, #FFC107);
+                        border-radius: 20px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 32px;
+                        font-weight: 800;
+                        color: #000;
+                        margin: 0 auto 20px;
+                    }
+                    h1 { color: #FFD700; }
+                    p { color: #8E8E93; }
+                    code {
+                        background: #1C1C1E;
+                        padding: 2px 6px;
+                        border-radius: 4px;
+                        color: #FFD700;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="logo">VT</div>
+                    <h1>VipTon - Build Required</h1>
+                    <p>React app not built yet. Please run:</p>
+                    <p><code>cd frontend && npm install && npm run build</code></p>
+                    <p style="margin-top: 20px; font-size: 12px;">
+                        Environment: """ + app.config['ENVIRONMENT'] + """
+                    </p>
+                </div>
+            </body>
+            </html>
+            """, 200
+
+    # =====================================
+    # ERROR HANDLERS
+    # =====================================
+
+    @app.errorhandler(404)
+    def not_found(error):
+        """Handle 404 errors"""
+        # Check if it's an API request
+        if request.path.startswith('/api/'):
+            return jsonify({
+                'success': False,
+                'error': 'API endpoint not found',
+                'code': 'NOT_FOUND',
+                'path': request.path
+            }), 404
+
+        # For non-API routes, try to serve React app
+        return serve_react_app('')
 
     @app.errorhandler(500)
     def internal_error(error):
+        """Handle 500 errors"""
         logger.error(f"500 Error: {error}")
         return jsonify({
             'success': False,
             'error': 'Internal server error',
             'code': 'INTERNAL_ERROR'
         }), 500
+
+    @app.errorhandler(429)
+    def rate_limit_exceeded(error):
+        """Handle rate limit errors"""
+        return jsonify({
+            'success': False,
+            'error': 'Too many requests. Please try again later.',
+            'code': 'RATE_LIMIT_EXCEEDED'
+        }), 429
 
     # Custom error handlers для VipTon exceptions
     from backend.core.exceptions import VipTonException, handle_vipton_exception, APIException
@@ -238,27 +320,63 @@ def create_app():
         return jsonify({
             'success': False,
             'error': error.message,
-            'code': error.code
+            'code': error.code,
+            'details': error.details if hasattr(error, 'details') else None
         }), error.status_code
+
+    # =====================================
+    # DEVELOPMENT HELPERS
+    # =====================================
+
+    if app.config['ENVIRONMENT'] == 'development':
+        @app.route('/api/debug/info', methods=['GET'])
+        def debug_info():
+            """Debug information (only in development)"""
+            return jsonify({
+                'environment': app.config['ENVIRONMENT'],
+                'static_folder': str(app.static_folder),
+                'static_exists': Path(app.static_folder).exists(),
+                'index_exists': (Path(app.static_folder) / 'index.html').exists(),
+                'webapp_url': app.config['WEBAPP_URL'],
+                'cors_origins': allowed_origins,
+                'routes': [str(rule) for rule in app.url_map.iter_rules()]
+            })
+
+    # Log startup information
+    logger.info(f"""
+    🚀 VipTon Server Configuration:
+    - Environment: {app.config['ENVIRONMENT']}
+    - Static Folder: {app.static_folder}
+    - WebApp URL: {app.config['WEBAPP_URL']}
+    - API Prefix: /api
+    - CORS Origins: {allowed_origins}
+    - Rate Limiting: {'Redis' if redis_url.startswith('redis://') else 'Memory'}
+    """)
 
     return app
 
+
+# Import datetime for health check
+from datetime import datetime
 
 # Створюємо додаток
 app = create_app()
 
 if __name__ == '__main__':
-    import os
-
-    # Отримуємо порт з оточення
     port = int(os.environ.get('PORT', 8080))
 
-    print(f"🚀 Starting VipTon...")
-    print(f"📍 PORT from environment: {os.environ.get('PORT', 'NOT SET')}")
-    print(f"🌐 Running on port: {port}")
+    print(f"""
+    ╔══════════════════════════════════════╗
+    ║         VipTon Server Starting       ║
+    ╠══════════════════════════════════════╣
+    ║  Environment: {app.config['ENVIRONMENT']:23s}║
+    ║  Port: {port:30d}║
+    ║  URL: http://localhost:{port:14d}║
+    ╚══════════════════════════════════════╝
+    """)
 
     app.run(
         host='0.0.0.0',
         port=port,
-        debug=False
+        debug=(app.config['ENVIRONMENT'] == 'development')
     )
