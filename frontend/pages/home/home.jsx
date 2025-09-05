@@ -1,17 +1,16 @@
+// frontend/pages/home/HomePage.jsx
 import React, { useState, useEffect } from 'react';
+import Header from '../../src/components/Header';
+import TabBar from '../../src/components/TabBar';
+import { Icons } from '../../src/components/Icons';
 
-// Import auth context hooks directly
+// Import auth context hooks
 import { useAuth, useVipStatus, useTonBalance } from '../../shared/auth/context/AuthContext';
-
-// Import components directly from their files
 import AuthLoader from '../../shared/auth/components/AuthLoader';
 import AuthError from '../../shared/auth/components/AuthError';
-import UserBadge from '../../shared/auth/components/UserBadge';
-import VipBadge from '../../shared/auth/components/VipBadge';
-
 
 /**
- * VipTon Home Page Component
+ * VipTon Home Page Component with Header and TabBar
  */
 const HomePage = () => {
     const { user, loading, error, isAuthenticated, login, logout } = useAuth();
@@ -19,7 +18,14 @@ const HomePage = () => {
     const { balance: tonBalance, formatted: tonFormatted } = useTonBalance();
 
     const [activeTab, setActiveTab] = useState('home');
-    const [miningActive, setMiningActive] = useState(false);
+    const [notifications, setNotifications] = useState(3);
+    const [badges, setBadges] = useState({
+        home: 0,
+        mining: 2,
+        tasks: 5,
+        referrals: 1,
+        wallet: 0
+    });
 
     // Loading state
     if (loading) {
@@ -44,191 +50,129 @@ const HomePage = () => {
         return <WelcomeScreen onLogin={login} />;
     }
 
+    // Handler functions for Header
+    const handleLogoClick = () => {
+        setActiveTab('home');
+    };
+
+    const handleBalanceClick = () => {
+        setActiveTab('wallet');
+    };
+
+    const handleShopClick = () => {
+        console.log('Opening shop...');
+        // TODO: Navigate to shop or open shop modal
+    };
+
+    const handleHistoryClick = () => {
+        console.log('Opening history...');
+        // TODO: Navigate to history or open history modal
+    };
+
+    const handleNotificationClick = () => {
+        setNotifications(0);
+        console.log('Opening notifications...');
+        // TODO: Show notifications panel
+    };
+
+    // Handler for TabBar
+    const handleTabChange = (tabId) => {
+        setActiveTab(tabId);
+        // Clear badge for selected tab
+        setBadges(prev => ({
+            ...prev,
+            [tabId]: 0
+        }));
+    };
+
     // Main App Interface
     return (
-        <div className="vipton-container">
+        <>
             <style jsx>{`
-                .vipton-container {
+                .vipton-app {
                     min-height: 100vh;
                     background: #000000;
-                    display: flex;
-                    flex-direction: column;
                     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+                    color: #FFFFFF;
                 }
-                
-                /* Header */
-                .vipton-header {
-                    background: rgba(28, 28, 30, 0.95);
-                    backdrop-filter: blur(20px);
-                    -webkit-backdrop-filter: blur(20px);
-                    border-bottom: 1px solid rgba(255, 215, 0, 0.1);
-                    padding: 12px 16px;
-                    position: sticky;
-                    top: 0;
-                    z-index: 100;
+
+                .vipton-content {
+                    padding-top: 60px; /* Header height */
+                    padding-bottom: 80px; /* TabBar height */
+                    min-height: 100vh;
                 }
-                
-                .vipton-header-content {
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                }
-                
-                .vipton-header-left {
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                }
-                
-                .vipton-logo {
-                    width: 36px;
-                    height: 36px;
-                    background: linear-gradient(135deg, #FFD700, #FFC107);
-                    border-radius: 10px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-weight: 800;
-                    font-size: 16px;
-                    color: #000000;
-                }
-                
-                .vipton-balance {
-                    display: flex;
-                    align-items: center;
-                    gap: 6px;
-                    padding: 6px 12px;
-                    background: rgba(255, 215, 0, 0.1);
-                    border-radius: 20px;
-                    font-size: 14px;
-                    font-weight: 600;
-                    color: #FFD700;
-                }
-                
-                /* Main Content */
-                .vipton-main {
-                    flex: 1;
+
+                .content-wrapper {
                     padding: 20px;
-                    overflow-y: auto;
-                    padding-bottom: 80px;
+                    max-width: 600px;
+                    margin: 0 auto;
                 }
-                
-                /* Bottom Navigation */
-                .vipton-nav {
-                    position: fixed;
-                    bottom: 0;
-                    left: 0;
-                    right: 0;
-                    background: rgba(28, 28, 30, 0.98);
-                    backdrop-filter: blur(20px);
-                    -webkit-backdrop-filter: blur(20px);
-                    border-top: 1px solid rgba(255, 215, 0, 0.1);
-                    padding: 8px 0 env(safe-area-inset-bottom, 8px);
-                    z-index: 100;
+
+                /* Reset styles */
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
                 }
-                
-                .vipton-nav-items {
-                    display: flex;
-                    justify-content: space-around;
-                }
-                
-                .vipton-nav-item {
-                    flex: 1;
-                    padding: 8px;
-                    background: none;
-                    border: none;
-                    color: #8E8E93;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    gap: 4px;
-                    -webkit-tap-highlight-color: transparent;
-                }
-                
-                .vipton-nav-item.active {
-                    color: #FFD700;
-                }
-                
-                .vipton-nav-icon {
-                    font-size: 24px;
-                }
-                
-                .vipton-nav-label {
-                    font-size: 11px;
-                    font-weight: 600;
+
+                body {
+                    background: #000000;
+                    -webkit-font-smoothing: antialiased;
+                    -moz-osx-font-smoothing: grayscale;
                 }
             `}</style>
 
-            {/* Header */}
-            <header className="vipton-header">
-                <div className="vipton-header-content">
-                    <div className="vipton-header-left">
-                        <div className="vipton-logo">VT</div>
-                        <div className="vipton-balance">
-                            💰 {tonFormatted} TON
-                        </div>
-                        {isVip && (
-                            <VipBadge size="small" showLevel={true} />
+            <div className="vipton-app">
+                <Header
+                    balance={tonBalance}
+                    vipLevel={vipLevel}
+                    notifications={notifications}
+                    onLogoClick={handleLogoClick}
+                    onBalanceClick={handleBalanceClick}
+                    onShopClick={handleShopClick}
+                    onHistoryClick={handleHistoryClick}
+                    onNotificationClick={handleNotificationClick}
+                />
+
+                <div className="vipton-content">
+                    <div className="content-wrapper">
+                        {activeTab === 'home' && (
+                            <HomeContent
+                                user={user}
+                                tonBalance={tonBalance}
+                                vipLevel={vipLevel}
+                                isVip={isVip}
+                            />
+                        )}
+
+                        {activeTab === 'mining' && (
+                            <MiningContent user={user} />
+                        )}
+
+                        {activeTab === 'tasks' && (
+                            <TasksContent />
+                        )}
+
+                        {activeTab === 'referrals' && (
+                            <ReferralsContent user={user} />
+                        )}
+
+                        {activeTab === 'wallet' && (
+                            <WalletContent
+                                balance={tonBalance}
+                                user={user}
+                            />
                         )}
                     </div>
-                    <UserBadge variant="compact" />
                 </div>
-            </header>
 
-            {/* Main Content */}
-            <main className="vipton-main">
-                {activeTab === 'home' && (
-                    <HomeContent
-                        user={user}
-                        tonBalance={tonFormatted}
-                        vipLevel={vipLevel}
-                        isVip={isVip}
-                        miningActive={miningActive}
-                        onStartMining={() => setMiningActive(true)}
-                    />
-                )}
-
-                {activeTab === 'mining' && (
-                    <MiningContent miningActive={miningActive} setMiningActive={setMiningActive} />
-                )}
-
-                {activeTab === 'tasks' && (
-                    <TasksContent />
-                )}
-
-                {activeTab === 'referrals' && (
-                    <ReferralsContent user={user} />
-                )}
-
-                {activeTab === 'profile' && (
-                    <ProfileContent user={user} onLogout={logout} />
-                )}
-            </main>
-
-            {/* Bottom Navigation */}
-            <nav className="vipton-nav">
-                <div className="vipton-nav-items">
-                    {[
-                        { id: 'home', icon: '🏠', label: 'Home' },
-                        { id: 'mining', icon: '⛏️', label: 'Mining' },
-                        { id: 'tasks', icon: '📋', label: 'Tasks' },
-                        { id: 'referrals', icon: '👥', label: 'Referrals' },
-                        { id: 'profile', icon: '👤', label: 'Profile' }
-                    ].map(tab => (
-                        <button
-                            key={tab.id}
-                            className={`vipton-nav-item ${activeTab === tab.id ? 'active' : ''}`}
-                            onClick={() => setActiveTab(tab.id)}
-                        >
-                            <span className="vipton-nav-icon">{tab.icon}</span>
-                            <span className="vipton-nav-label">{tab.label}</span>
-                        </button>
-                    ))}
-                </div>
-            </nav>
-        </div>
+                <TabBar
+                    activeTab={activeTab}
+                    onTabChange={handleTabChange}
+                    showBadges={badges}
+                />
+            </div>
+        </>
     );
 };
 
@@ -236,7 +180,7 @@ const HomePage = () => {
  * Welcome Screen Component
  */
 const WelcomeScreen = ({ onLogin }) => (
-    <div className="vipton-welcome">
+    <>
         <style jsx>{`
             .vipton-welcome {
                 min-height: 100vh;
@@ -338,8 +282,20 @@ const WelcomeScreen = ({ onLogin }) => (
             }
             
             .vipton-feature-icon {
-                font-size: 32px;
-                margin-bottom: 8px;
+                width: 48px;
+                height: 48px;
+                margin: 0 auto 8px;
+                background: rgba(255, 215, 0, 0.1);
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #FFD700;
+            }
+            
+            .vipton-feature-icon svg {
+                width: 24px;
+                height: 24px;
             }
             
             .vipton-feature-text {
@@ -348,59 +304,87 @@ const WelcomeScreen = ({ onLogin }) => (
             }
         `}</style>
 
-        <div className="vipton-bg-gradient" />
+        <div className="vipton-welcome">
+            <div className="vipton-bg-gradient" />
 
-        <div className="vipton-welcome-content">
-            <div className="vipton-logo-container">VT</div>
+            <div className="vipton-welcome-content">
+                <div className="vipton-logo-container">VT</div>
 
-            <h1 className="vipton-welcome-title">VipTon</h1>
-            <p className="vipton-welcome-subtitle">
-                Premium TON Mining Platform
-            </p>
+                <h1 className="vipton-welcome-title">VipTon</h1>
+                <p className="vipton-welcome-subtitle">
+                    Premium TON Mining Platform
+                </p>
 
-            <button className="vipton-auth-btn" onClick={onLogin}>
-                Login with Telegram
-            </button>
+                <button className="vipton-auth-btn" onClick={onLogin}>
+                    Login with Telegram
+                </button>
 
-            <div className="vipton-features">
-                <div className="vipton-feature">
-                    <div className="vipton-feature-icon">💰</div>
-                    <div className="vipton-feature-text">Earn TON</div>
-                </div>
-                <div className="vipton-feature">
-                    <div className="vipton-feature-icon">👑</div>
-                    <div className="vipton-feature-text">VIP Benefits</div>
-                </div>
-                <div className="vipton-feature">
-                    <div className="vipton-feature-icon">🚀</div>
-                    <div className="vipton-feature-text">Fast Mining</div>
+                <div className="vipton-features">
+                    <div className="vipton-feature">
+                        <div className="vipton-feature-icon">
+                            <Icons.coin />
+                        </div>
+                        <div className="vipton-feature-text">Earn TON</div>
+                    </div>
+                    <div className="vipton-feature">
+                        <div className="vipton-feature-icon">
+                            <Icons.crown />
+                        </div>
+                        <div className="vipton-feature-text">VIP Benefits</div>
+                    </div>
+                    <div className="vipton-feature">
+                        <div className="vipton-feature-icon">
+                            <Icons.mining />
+                        </div>
+                        <div className="vipton-feature-text">Fast Mining</div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </>
 );
 
 /**
  * Home Content Component
  */
-const HomeContent = ({ user, tonBalance, vipLevel, isVip, miningActive, onStartMining }) => (
-    <div className="vipton-home">
+const HomeContent = ({ user, tonBalance, vipLevel, isVip }) => (
+    <>
         <style jsx>{`
-            .vipton-welcome-user {
+            .home-container {
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+                animation: fadeIn 0.5s ease-in;
+            }
+
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+
+            .welcome-section {
+                margin-bottom: 8px;
+            }
+
+            .welcome-title {
                 font-size: 28px;
                 font-weight: 700;
                 color: #FFFFFF;
-                margin: 0 0 24px;
+                margin: 0 0 4px;
             }
-            
-            .vipton-stats-grid {
+
+            .welcome-subtitle {
+                font-size: 16px;
+                color: #8E8E93;
+            }
+
+            .stats-grid {
                 display: grid;
                 grid-template-columns: repeat(2, 1fr);
                 gap: 16px;
-                margin-bottom: 32px;
             }
-            
-            .vipton-stat-card {
+
+            .stat-card {
                 background: rgba(28, 28, 30, 0.9);
                 backdrop-filter: blur(10px);
                 -webkit-backdrop-filter: blur(10px);
@@ -410,9 +394,15 @@ const HomeContent = ({ user, tonBalance, vipLevel, isVip, miningActive, onStartM
                 text-align: center;
                 position: relative;
                 overflow: hidden;
+                transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             }
-            
-            .vipton-stat-card::before {
+
+            .stat-card:hover {
+                transform: translateY(-2px);
+                border-color: rgba(255, 215, 0, 0.2);
+            }
+
+            .stat-card::before {
                 content: '';
                 position: absolute;
                 top: 0;
@@ -422,30 +412,36 @@ const HomeContent = ({ user, tonBalance, vipLevel, isVip, miningActive, onStartM
                 background: linear-gradient(90deg, 
                     transparent, rgba(255, 215, 0, 0.5), transparent);
             }
-            
-            .vipton-stat-icon {
-                font-size: 32px;
-                margin-bottom: 12px;
+
+            .stat-icon {
+                width: 32px;
+                height: 32px;
+                margin: 0 auto 12px;
+                color: #FFD700;
             }
-            
-            .vipton-stat-value {
+
+            .stat-value {
                 font-size: 24px;
                 font-weight: 700;
                 color: #FFD700;
                 margin-bottom: 4px;
             }
-            
-            .vipton-stat-label {
+
+            .stat-label {
                 font-size: 14px;
                 color: #8E8E93;
             }
-            
-            .vipton-action-buttons {
+
+            .action-section {
+                margin-top: 12px;
+            }
+
+            .action-grid {
                 display: grid;
                 gap: 12px;
             }
-            
-            .vipton-action-btn {
+
+            .action-btn {
                 padding: 16px;
                 background: rgba(28, 28, 30, 0.9);
                 border: 1px solid rgba(255, 215, 0, 0.1);
@@ -460,140 +456,821 @@ const HomeContent = ({ user, tonBalance, vipLevel, isVip, miningActive, onStartM
                 justify-content: center;
                 gap: 8px;
             }
-            
-            .vipton-action-btn:hover {
+
+            .action-btn:hover {
                 background: rgba(255, 215, 0, 0.1);
                 border-color: rgba(255, 215, 0, 0.3);
                 transform: translateY(-2px);
             }
-            
-            .vipton-action-btn.primary {
+
+            .action-btn.primary {
                 background: linear-gradient(135deg, #FFD700, #FFC107);
                 color: #000000;
                 border: none;
             }
-            
-            .vipton-action-btn.mining-active {
-                background: linear-gradient(135deg, #10B981, #059669);
-                animation: pulse 2s infinite;
+
+            .action-btn.primary:hover {
+                box-shadow: 0 4px 20px rgba(255, 215, 0, 0.4);
             }
-            
-            @keyframes pulse {
-                0%, 100% { opacity: 1; }
-                50% { opacity: 0.8; }
+
+            .action-btn svg {
+                width: 20px;
+                height: 20px;
+            }
+
+            .info-card {
+                background: rgba(28, 28, 30, 0.9);
+                border-radius: 16px;
+                padding: 20px;
+                border: 1px solid rgba(255, 215, 0, 0.1);
+                margin-top: 20px;
+            }
+
+            .info-title {
+                font-size: 18px;
+                font-weight: 600;
+                color: #FFD700;
+                margin-bottom: 12px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .info-title svg {
+                width: 20px;
+                height: 20px;
+            }
+
+            .info-text {
+                font-size: 14px;
+                color: #8E8E93;
+                line-height: 1.5;
             }
         `}</style>
 
-        <h1 className="vipton-welcome-user">
-            Welcome, {user?.first_name || 'User'}! 👋
-        </h1>
-
-        <div className="vipton-stats-grid">
-            <div className="vipton-stat-card">
-                <div className="vipton-stat-icon">💰</div>
-                <div className="vipton-stat-value">{tonBalance}</div>
-                <div className="vipton-stat-label">TON Balance</div>
+        <div className="home-container">
+            <div className="welcome-section">
+                <h1 className="welcome-title">
+                    Welcome, {user?.first_name || 'Miner'}!
+                </h1>
+                <p className="welcome-subtitle">
+                    Your mining empire awaits
+                </p>
             </div>
 
-            <div className="vipton-stat-card">
-                <div className="vipton-stat-icon">👑</div>
-                <div className="vipton-stat-value">
-                    {isVip ? `Level ${vipLevel}` : 'None'}
+            <div className="stats-grid">
+                <div className="stat-card">
+                    <div className="stat-icon">
+                        <Icons.coin />
+                    </div>
+                    <div className="stat-value">{tonBalance.toFixed(2)}</div>
+                    <div className="stat-label">TON Balance</div>
                 </div>
-                <div className="vipton-stat-label">VIP Status</div>
+
+                <div className="stat-card">
+                    <div className="stat-icon">
+                        {vipLevel >= 3 ? <Icons.diamond /> : vipLevel >= 2 ? <Icons.crown /> : <Icons.star />}
+                    </div>
+                    <div className="stat-value">
+                        {isVip ? `Level ${vipLevel}` : 'Free'}
+                    </div>
+                    <div className="stat-label">VIP Status</div>
+                </div>
+
+                <div className="stat-card">
+                    <div className="stat-icon">
+                        <Icons.referrals />
+                    </div>
+                    <div className="stat-value">{user?.total_referrals || 0}</div>
+                    <div className="stat-label">Referrals</div>
+                </div>
+
+                <div className="stat-card">
+                    <div className="stat-icon">
+                        <Icons.arrowUp />
+                    </div>
+                    <div className="stat-value">{user?.total_earned || 0}</div>
+                    <div className="stat-label">Total Earned</div>
+                </div>
             </div>
 
-            <div className="vipton-stat-card">
-                <div className="vipton-stat-icon">👥</div>
-                <div className="vipton-stat-value">{user?.total_referrals || 0}</div>
-                <div className="vipton-stat-label">Referrals</div>
+            <div className="action-section">
+                <div className="action-grid">
+                    <button className="action-btn primary">
+                        <Icons.mining />
+                        <span>Start Mining</span>
+                    </button>
+                    <button className="action-btn">
+                        <Icons.claim />
+                        <span>Claim Rewards</span>
+                    </button>
+                    <button className="action-btn">
+                        <Icons.upgrade />
+                        <span>Upgrade Miners</span>
+                    </button>
+                </div>
             </div>
 
-            <div className="vipton-stat-card">
-                <div className="vipton-stat-icon">🚀</div>
-                <div className="vipton-stat-value">{user?.total_earned || 0}</div>
-                <div className="vipton-stat-label">Total Earned</div>
-            </div>
+            {!isVip && (
+                <div className="info-card">
+                    <div className="info-title">
+                        <Icons.crown />
+                        <span>Unlock VIP Benefits</span>
+                    </div>
+                    <p className="info-text">
+                        Get auto-claim, priority withdrawals, and exclusive bonuses.
+                        Upgrade to VIP today and maximize your earnings!
+                    </p>
+                </div>
+            )}
         </div>
-
-        <div className="vipton-action-buttons">
-            <button
-                className={`vipton-action-btn primary ${miningActive ? 'mining-active' : ''}`}
-                onClick={onStartMining}
-            >
-                {miningActive ? '⛏️ Mining Active...' : '⛏️ Start Mining'}
-            </button>
-            <button className="vipton-action-btn">
-                🎁 Daily Reward
-            </button>
-            <button className="vipton-action-btn">
-                📊 View Tasks
-            </button>
-        </div>
-    </div>
+    </>
 );
 
 /**
- * Mining Content Component (placeholder)
+ * Mining Content Component
  */
-const MiningContent = ({ miningActive, setMiningActive }) => (
-    <div style={{ padding: 20, color: '#fff' }}>
-        <h2>Mining</h2>
-        <p>Mining status: {miningActive ? 'Active' : 'Inactive'}</p>
-        <button
-            onClick={() => setMiningActive(!miningActive)}
-            style={{ padding: 10, background: '#FFD700', color: '#000' }}
-        >
-            {miningActive ? 'Stop Mining' : 'Start Mining'}
-        </button>
-    </div>
+const MiningContent = ({ user }) => (
+    <>
+        <style jsx>{`
+            .mining-container {
+                padding: 20px 0;
+                animation: fadeIn 0.5s ease-in;
+            }
+
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+
+            .mining-header {
+                text-align: center;
+                margin-bottom: 24px;
+            }
+
+            .mining-title {
+                font-size: 24px;
+                font-weight: 700;
+                color: #FFFFFF;
+                margin-bottom: 8px;
+            }
+
+            .mining-subtitle {
+                font-size: 16px;
+                color: #8E8E93;
+            }
+
+            .miners-list {
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .miner-card {
+                background: rgba(28, 28, 30, 0.9);
+                border: 1px solid rgba(255, 215, 0, 0.1);
+                border-radius: 16px;
+                padding: 20px;
+                position: relative;
+            }
+
+            .miner-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 12px;
+            }
+
+            .miner-name {
+                font-size: 18px;
+                font-weight: 600;
+                color: #FFFFFF;
+            }
+
+            .miner-status {
+                padding: 4px 12px;
+                background: rgba(52, 199, 89, 0.2);
+                color: #34C759;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: 600;
+            }
+
+            .miner-status.inactive {
+                background: rgba(255, 59, 48, 0.2);
+                color: #FF3B30;
+            }
+
+            .miner-stats {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 16px;
+            }
+
+            .miner-stat {
+                text-align: center;
+            }
+
+            .miner-stat-value {
+                font-size: 16px;
+                font-weight: 600;
+                color: #FFD700;
+            }
+
+            .miner-stat-label {
+                font-size: 12px;
+                color: #8E8E93;
+                margin-top: 4px;
+            }
+
+            .miner-actions {
+                display: flex;
+                gap: 8px;
+            }
+
+            .miner-btn {
+                flex: 1;
+                padding: 10px;
+                background: rgba(255, 215, 0, 0.1);
+                border: 1px solid rgba(255, 215, 0, 0.2);
+                border-radius: 10px;
+                color: #FFD700;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            .miner-btn:hover {
+                background: rgba(255, 215, 0, 0.2);
+                transform: translateY(-1px);
+            }
+        `}</style>
+
+        <div className="mining-container">
+            <div className="mining-header">
+                <h2 className="mining-title">Mining Dashboard</h2>
+                <p className="mining-subtitle">Manage your mining operations</p>
+            </div>
+
+            <div className="miners-list">
+                <div className="miner-card">
+                    <div className="miner-header">
+                        <span className="miner-name">Basic Miner</span>
+                        <span className="miner-status">Active</span>
+                    </div>
+                    <div className="miner-stats">
+                        <div className="miner-stat">
+                            <div className="miner-stat-value">2.5</div>
+                            <div className="miner-stat-label">TON/Day</div>
+                        </div>
+                        <div className="miner-stat">
+                            <div className="miner-stat-value">Level 1</div>
+                            <div className="miner-stat-label">Current</div>
+                        </div>
+                        <div className="miner-stat">
+                            <div className="miner-stat-value">1:45:23</div>
+                            <div className="miner-stat-label">Next Claim</div>
+                        </div>
+                    </div>
+                    <div className="miner-actions">
+                        <button className="miner-btn">Claim</button>
+                        <button className="miner-btn">Upgrade</button>
+                    </div>
+                </div>
+
+                <div className="miner-card">
+                    <div className="miner-header">
+                        <span className="miner-name">Advanced Miner</span>
+                        <span className="miner-status inactive">Inactive</span>
+                    </div>
+                    <div className="miner-stats">
+                        <div className="miner-stat">
+                            <div className="miner-stat-value">5.0</div>
+                            <div className="miner-stat-label">TON/Day</div>
+                        </div>
+                        <div className="miner-stat">
+                            <div className="miner-stat-value">Level 2</div>
+                            <div className="miner-stat-label">Current</div>
+                        </div>
+                        <div className="miner-stat">
+                            <div className="miner-stat-value">Ready</div>
+                            <div className="miner-stat-label">Next Claim</div>
+                        </div>
+                    </div>
+                    <div className="miner-actions">
+                        <button className="miner-btn">Activate</button>
+                        <button className="miner-btn">Upgrade</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </>
 );
 
 /**
- * Tasks Content Component (placeholder)
+ * Tasks Content Component
  */
 const TasksContent = () => (
-    <div style={{ padding: 20, color: '#fff' }}>
-        <h2>Tasks</h2>
-        <p>Complete tasks to earn more TON</p>
-    </div>
+    <>
+        <style jsx>{`
+            .tasks-container {
+                padding: 20px 0;
+                animation: fadeIn 0.5s ease-in;
+            }
+
+            .tasks-header {
+                text-align: center;
+                margin-bottom: 24px;
+            }
+
+            .tasks-title {
+                font-size: 24px;
+                font-weight: 700;
+                color: #FFFFFF;
+                margin-bottom: 8px;
+            }
+
+            .tasks-subtitle {
+                font-size: 16px;
+                color: #8E8E93;
+            }
+
+            .tasks-list {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .task-card {
+                background: rgba(28, 28, 30, 0.9);
+                border: 1px solid rgba(255, 215, 0, 0.1);
+                border-radius: 14px;
+                padding: 16px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            .task-card:hover {
+                transform: translateX(4px);
+                border-color: rgba(255, 215, 0, 0.2);
+            }
+
+            .task-icon {
+                width: 40px;
+                height: 40px;
+                background: rgba(255, 215, 0, 0.1);
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #FFD700;
+            }
+
+            .task-info {
+                flex: 1;
+            }
+
+            .task-name {
+                font-size: 16px;
+                font-weight: 600;
+                color: #FFFFFF;
+                margin-bottom: 4px;
+            }
+
+            .task-reward {
+                font-size: 14px;
+                color: #FFD700;
+            }
+
+            .task-arrow {
+                width: 20px;
+                height: 20px;
+                color: #8E8E93;
+            }
+        `}</style>
+
+        <div className="tasks-container">
+            <div className="tasks-header">
+                <h2 className="tasks-title">Available Tasks</h2>
+                <p className="tasks-subtitle">Complete tasks to earn more TON</p>
+            </div>
+
+            <div className="tasks-list">
+                <div className="task-card">
+                    <div className="task-icon">
+                        <Icons.check />
+                    </div>
+                    <div className="task-info">
+                        <div className="task-name">Subscribe to Channel</div>
+                        <div className="task-reward">+0.5 TON</div>
+                    </div>
+                    <div className="task-arrow">→</div>
+                </div>
+
+                <div className="task-card">
+                    <div className="task-icon">
+                        <Icons.star />
+                    </div>
+                    <div className="task-info">
+                        <div className="task-name">Daily Check-in</div>
+                        <div className="task-reward">+0.1 TON</div>
+                    </div>
+                    <div className="task-arrow">→</div>
+                </div>
+
+                <div className="task-card">
+                    <div className="task-icon">
+                        <Icons.referrals />
+                    </div>
+                    <div className="task-info">
+                        <div className="task-name">Invite 3 Friends</div>
+                        <div className="task-reward">+2.0 TON</div>
+                    </div>
+                    <div className="task-arrow">→</div>
+                </div>
+            </div>
+        </div>
+    </>
 );
 
 /**
- * Referrals Content Component (placeholder)
+ * Referrals Content Component
  */
 const ReferralsContent = ({ user }) => (
-    <div style={{ padding: 20, color: '#fff' }}>
-        <h2>Referrals</h2>
-        <p>Your referral code: {user?.referral_code || 'VIP123'}</p>
-        <p>Total referrals: {user?.total_referrals || 0}</p>
-    </div>
+    <>
+        <style jsx>{`
+            .referrals-container {
+                padding: 20px 0;
+                animation: fadeIn 0.5s ease-in;
+            }
+
+            .referrals-header {
+                text-align: center;
+                margin-bottom: 24px;
+            }
+
+            .referrals-title {
+                font-size: 24px;
+                font-weight: 700;
+                color: #FFFFFF;
+                margin-bottom: 8px;
+            }
+
+            .referrals-subtitle {
+                font-size: 16px;
+                color: #8E8E93;
+            }
+
+            .referral-code-card {
+                background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 193, 7, 0.1));
+                border: 1px solid rgba(255, 215, 0, 0.2);
+                border-radius: 16px;
+                padding: 20px;
+                text-align: center;
+                margin-bottom: 20px;
+            }
+
+            .referral-code-label {
+                font-size: 14px;
+                color: #8E8E93;
+                margin-bottom: 8px;
+            }
+
+            .referral-code {
+                font-size: 24px;
+                font-weight: 700;
+                color: #FFD700;
+                margin-bottom: 16px;
+                font-family: 'SF Mono', monospace;
+            }
+
+            .copy-btn {
+                padding: 12px 24px;
+                background: linear-gradient(135deg, #FFD700, #FFC107);
+                color: #000000;
+                border: none;
+                border-radius: 12px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            .copy-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
+            }
+
+            .referral-stats {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+                margin-bottom: 20px;
+            }
+
+            .referral-stat {
+                background: rgba(28, 28, 30, 0.9);
+                border: 1px solid rgba(255, 215, 0, 0.1);
+                border-radius: 12px;
+                padding: 16px;
+                text-align: center;
+            }
+
+            .referral-stat-value {
+                font-size: 20px;
+                font-weight: 600;
+                color: #FFD700;
+                margin-bottom: 4px;
+            }
+
+            .referral-stat-label {
+                font-size: 12px;
+                color: #8E8E93;
+            }
+        `}</style>
+
+        <div className="referrals-container">
+            <div className="referrals-header">
+                <h2 className="referrals-title">Referral Program</h2>
+                <p className="referrals-subtitle">Invite friends and earn rewards</p>
+            </div>
+
+            <div className="referral-code-card">
+                <div className="referral-code-label">Your Referral Code</div>
+                <div className="referral-code">VIP{user?.id || '12345'}</div>
+                <button className="copy-btn" onClick={() => {
+                    navigator.clipboard.writeText(`VIP${user?.id || '12345'}`);
+                    alert('Referral code copied!');
+                }}>
+                    Copy Code
+                </button>
+            </div>
+
+            <div className="referral-stats">
+                <div className="referral-stat">
+                    <div className="referral-stat-value">{user?.total_referrals || 0}</div>
+                    <div className="referral-stat-label">Total Referrals</div>
+                </div>
+                <div className="referral-stat">
+                    <div className="referral-stat-value">5%</div>
+                    <div className="referral-stat-label">Commission Rate</div>
+                </div>
+                <div className="referral-stat">
+                    <div className="referral-stat-value">12.5</div>
+                    <div className="referral-stat-label">Earned (TON)</div>
+                </div>
+                <div className="referral-stat">
+                    <div className="referral-stat-value">3</div>
+                    <div className="referral-stat-label">Active Today</div>
+                </div>
+            </div>
+        </div>
+    </>
 );
 
 /**
- * Profile Content Component (placeholder)
+ * Wallet Content Component
  */
-const ProfileContent = ({ user, onLogout }) => (
-    <div style={{ padding: 20 }}>
-        <UserBadge variant="full" />
-        <button
-            style={{
-                marginTop: 20,
-                padding: '14px 24px',
-                background: '#2C2C2E',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 12,
-                fontSize: 16,
-                fontWeight: 600,
-                cursor: 'pointer',
-                width: '100%'
-            }}
-            onClick={onLogout}
-        >
-            Logout
-        </button>
-    </div>
+const WalletContent = ({ balance, user }) => (
+    <>
+        <style jsx>{`
+            .wallet-container {
+                padding: 20px 0;
+                animation: fadeIn 0.5s ease-in;
+            }
+
+            .wallet-balance-card {
+                background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(28, 28, 30, 0.9));
+                border: 1px solid rgba(255, 215, 0, 0.2);
+                border-radius: 20px;
+                padding: 32px;
+                text-align: center;
+                margin-bottom: 24px;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .wallet-balance-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.1), transparent);
+                animation: shimmer 3s infinite;
+            }
+
+            @keyframes shimmer {
+                0% { left: -100%; }
+                100% { left: 100%; }
+            }
+
+            .wallet-balance-label {
+                font-size: 14px;
+                color: #8E8E93;
+                margin-bottom: 8px;
+            }
+
+            .wallet-balance-amount {
+                font-size: 42px;
+                font-weight: 700;
+                color: #FFD700;
+                margin-bottom: 4px;
+                font-family: 'SF Mono', monospace;
+            }
+
+            .wallet-balance-currency {
+                font-size: 18px;
+                color: rgba(255, 215, 0, 0.8);
+            }
+
+            .wallet-actions {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+                margin-bottom: 24px;
+            }
+
+            .wallet-btn {
+                padding: 16px;
+                background: rgba(28, 28, 30, 0.9);
+                border: 1px solid rgba(255, 215, 0, 0.1);
+                border-radius: 14px;
+                font-size: 16px;
+                font-weight: 600;
+                color: #FFFFFF;
+                cursor: pointer;
+                transition: all 0.2s;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .wallet-btn:hover {
+                background: rgba(255, 215, 0, 0.1);
+                border-color: rgba(255, 215, 0, 0.2);
+                transform: translateY(-2px);
+            }
+
+            .wallet-btn.primary {
+                background: linear-gradient(135deg, #FFD700, #FFC107);
+                color: #000000;
+                border: none;
+            }
+
+            .wallet-btn svg {
+                width: 24px;
+                height: 24px;
+            }
+
+            .wallet-history {
+                background: rgba(28, 28, 30, 0.9);
+                border: 1px solid rgba(255, 215, 0, 0.1);
+                border-radius: 16px;
+                padding: 20px;
+            }
+
+            .wallet-history-title {
+                font-size: 18px;
+                font-weight: 600;
+                color: #FFFFFF;
+                margin-bottom: 16px;
+            }
+
+            .history-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 12px 0;
+                border-bottom: 1px solid rgba(255, 215, 0, 0.05);
+            }
+
+            .history-item:last-child {
+                border-bottom: none;
+            }
+
+            .history-info {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+
+            .history-icon {
+                width: 32px;
+                height: 32px;
+                background: rgba(255, 215, 0, 0.1);
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #FFD700;
+            }
+
+            .history-details {
+                text-align: left;
+            }
+
+            .history-type {
+                font-size: 14px;
+                font-weight: 600;
+                color: #FFFFFF;
+            }
+
+            .history-date {
+                font-size: 12px;
+                color: #8E8E93;
+            }
+
+            .history-amount {
+                font-size: 16px;
+                font-weight: 600;
+            }
+
+            .history-amount.positive {
+                color: #34C759;
+            }
+
+            .history-amount.negative {
+                color: #FF3B30;
+            }
+        `}</style>
+
+        <div className="wallet-container">
+            <div className="wallet-balance-card">
+                <div className="wallet-balance-label">Total Balance</div>
+                <div className="wallet-balance-amount">{balance.toFixed(2)}</div>
+                <div className="wallet-balance-currency">TON</div>
+            </div>
+
+            <div className="wallet-actions">
+                <button className="wallet-btn primary">
+                    <Icons.arrowDown />
+                    <span>Deposit</span>
+                </button>
+                <button className="wallet-btn">
+                    <Icons.arrowUp />
+                    <span>Withdraw</span>
+                </button>
+                <button className="wallet-btn">
+                    <Icons.history />
+                    <span>History</span>
+                </button>
+                <button className="wallet-btn">
+                    <Icons.settings />
+                    <span>Settings</span>
+                </button>
+            </div>
+
+            <div className="wallet-history">
+                <h3 className="wallet-history-title">Recent Transactions</h3>
+
+                <div className="history-item">
+                    <div className="history-info">
+                        <div className="history-icon">
+                            <Icons.arrowDown />
+                        </div>
+                        <div className="history-details">
+                            <div className="history-type">Deposit</div>
+                            <div className="history-date">Today, 14:23</div>
+                        </div>
+                    </div>
+                    <div className="history-amount positive">+50.00</div>
+                </div>
+
+                <div className="history-item">
+                    <div className="history-info">
+                        <div className="history-icon">
+                            <Icons.claim />
+                        </div>
+                        <div className="history-details">
+                            <div className="history-type">Mining Claim</div>
+                            <div className="history-date">Today, 12:00</div>
+                        </div>
+                    </div>
+                    <div className="history-amount positive">+2.50</div>
+                </div>
+
+                <div className="history-item">
+                    <div className="history-info">
+                        <div className="history-icon">
+                            <Icons.shop />
+                        </div>
+                        <div className="history-details">
+                            <div className="history-type">Miner Purchase</div>
+                            <div className="history-date">Yesterday</div>
+                        </div>
+                    </div>
+                    <div className="history-amount negative">-25.00</div>
+                </div>
+            </div>
+        </div>
+    </>
 );
 
 export default HomePage;
