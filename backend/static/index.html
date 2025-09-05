@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#000000">
+
+    <!-- Telegram Web App -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <title>VipTon - Premium TON Mining</title>
+
+    <style>
+        /* Базові стилі до завантаження React */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            background: #000000;
+            color: #ffffff;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Preloader */
+        .vipton-preloader {
+            position: fixed;
+            inset: 0;
+            background: #000000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .vipton-preloader-logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #FFD700, #FFC107);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 800;
+            color: #000000;
+            margin-bottom: 20px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.9; }
+        }
+    </style>
+  <script type="module" crossorigin src="/assets/index-BlzZDiP2.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-C9BDyeBi.css">
+</head>
+<body>
+    <div id="root">
+        <div class="vipton-preloader">
+            <div class="vipton-preloader-logo">VT</div>
+            <div style="color: #8E8E93; font-size: 14px;">Loading VipTon...</div>
+        </div>
+    </div>
+    <!-- Vite додасть цей скрипт автоматично -->
+</body>
+</html>
