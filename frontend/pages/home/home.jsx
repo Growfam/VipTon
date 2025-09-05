@@ -322,7 +322,7 @@ const WelcomeScreen = ({ onLogin }) => (
                 <div className="vipton-features">
                     <div className="vipton-feature">
                         <div className="vipton-feature-icon">
-                            <Icons.coin />
+                            <Icons.ton style={{width: 20, height: 20}} />
                         </div>
                         <div className="vipton-feature-text">Earn TON</div>
                     </div>
@@ -521,7 +521,7 @@ const HomeContent = ({ user, tonBalance, vipLevel, isVip }) => (
             <div className="stats-grid">
                 <div className="stat-card">
                     <div className="stat-icon">
-                        <Icons.coin />
+                        <Icons.ton style={{width: 20, height: 20}} />
                     </div>
                     <div className="stat-value">{tonBalance.toFixed(2)}</div>
                     <div className="stat-label">TON Balance</div>

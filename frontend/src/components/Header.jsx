@@ -366,7 +366,7 @@ const Header = ({
           <div className="header-center">
             <div className="balance-container" onClick={onBalanceClick}>
               <span className="balance-icon">
-                <Icons.coin />
+                <Icons.ton style={{width: 20, height: 20}} />
               </span>
               <span className="balance-amount">{formatBalance(balance)}</span>
               <span className="balance-currency">TON</span>
