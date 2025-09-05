@@ -6,19 +6,15 @@ import React from 'react';
  */
 
 export const Icons = {
-  // Logo & Branding - Animated VT Premium
+  // Logo & Branding - VT Text Only MAXIMUM SIZE
 logo: (props) => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" {...props}>
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" {...props}>
     <defs>
-      <radialGradient id="vt-gradient">
-        <stop offset="0%" style={{ stopColor: '#FFEB3B', stopOpacity: 1 }} />
-        <stop offset="100%" style={{ stopColor: '#FFC107', stopOpacity: 1 }} />
-      </radialGradient>
       <style>
         {`
           @keyframes vt-pulse {
             0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+            50% { transform: scale(1.08); }
           }
           .vt-animated {
             animation: vt-pulse 3s ease-in-out infinite;
@@ -27,16 +23,16 @@ logo: (props) => (
         `}
       </style>
     </defs>
-    <rect width="24" height="24" fill="url(#vt-gradient)" rx="3" />
     <text
       x="12"
-      y="19"
+      y="20"
       fontFamily="Arial Black"
-      fontSize="20"
+      fontSize="22"
       fontWeight="900"
-      fill="#000000"
+      fill="currentColor"
       textAnchor="middle"
       className="vt-animated"
+      style={{ letterSpacing: "-2px" }}
     >
       VT
     </text>
