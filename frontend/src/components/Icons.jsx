@@ -6,7 +6,7 @@ import React from 'react';
  */
 
 export const Icons = {
-  // Logo & Branding - VT Text Only MAXIMUM SIZE
+  // Logo & Branding - VT Text Only
 logo: (props) => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" {...props}>
     <defs>
@@ -25,14 +25,13 @@ logo: (props) => (
     </defs>
     <text
       x="12"
-      y="20"
+      y="18"
       fontFamily="Arial Black"
-      fontSize="22"
+      fontSize="16"
       fontWeight="900"
       fill="currentColor"
       textAnchor="middle"
       className="vt-animated"
-      style={{ letterSpacing: "-2px" }}
     >
       VT
     </text>
